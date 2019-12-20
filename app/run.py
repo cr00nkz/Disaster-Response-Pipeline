@@ -1,9 +1,13 @@
 import json
 import plotly
 import pandas as pd
+import re
 
+import nltk
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
+from nltk.stem import PorterStemmer
+from nltk.corpus import stopwords
 
 from flask import Flask
 from flask import render_template, request, jsonify
@@ -11,26 +15,50 @@ from plotly.graph_objs import Bar
 from sklearn.externals import joblib
 from sqlalchemy import create_engine
 
+nltk.download(['punkt', 'wordnet', 'stopwords'])
 
 app = Flask(__name__)
 
 def tokenize(text):
-    tokens = word_tokenize(text)
-    lemmatizer = WordNetLemmatizer()
+    """The tokenizer used for the CountVectorizer, 
+        which is called in the pipeline.
+        Performs the following actions on the input text:
+        * convert to lowercase
+        * remove punctuation
+        * tokenize
+        * remove stopwords
+        * lemmatize
+        * stem
 
-    clean_tokens = []
-    for tok in tokens:
-        clean_tok = lemmatizer.lemmatize(tok).lower().strip()
-        clean_tokens.append(clean_tok)
+    INPUT: text - The text to tokenize
 
-    return clean_tokens
+    RETURNS: A processed tokenized array
+    """
+
+    #remove punctuation, lowercase
+    text = re.sub(r"[^a-zA-Z0-9]", " ", text.lower())
+    
+    #tokenize
+    words = nltk.tokenize.word_tokenize(text)
+    
+    #remove stopwords
+    words = [w for w in words if w not in stopwords.words("english")]
+    
+    # Lemmatize our words
+    words = [WordNetLemmatizer().lemmatize(w, pos='v') for w in words]
+    
+    # Stem our words
+    words = [PorterStemmer().stem(w).strip() for w in words]
+
+    return words
+
 
 # load data
-engine = create_engine('sqlite:///../data/YourDatabaseName.db')
-df = pd.read_sql_table('YourTableName', engine)
+engine = create_engine('sqlite:///../data/ETL_Disaster.db')
+df = pd.read_sql_table('DISASTER_DATA', engine)
 
 # load model
-model = joblib.load("../models/your_model_name.pkl")
+model = joblib.load("../models/model.pck")
 
 
 # index webpage displays cool visuals and receives user input text for model
@@ -93,7 +121,9 @@ def go():
 
 
 def main():
+    print("starting")
     app.run(host='0.0.0.0', port=3001, debug=True)
+    print("started")
 
 
 if __name__ == '__main__':

@@ -17,11 +17,11 @@ import pickle
 nltk.download(['punkt', 'wordnet', 'stopwords'])
 
 
-def load_data(db="sqlite:///../Pipeline/ETL_Disaster.db", table="DISASTER_DATA"):
+def load_data(db="sqlite:///../data/ETL_Disaster.db", table="DISASTER_DATA"):
     """Loads the previously saved data from database and table
 
     INPUT: db - The sqlite database file 
-                (default: sqlite:///../Pipeline/ETL_Disaster.db)
+                (default: sqlite:///../data/ETL_Disaster.db)
            table - The tablename containing the data (default: DISASTER_DATA)
 
     RETURNS: X - Dataframe containing the messages for training/testing
@@ -93,9 +93,10 @@ def build_model(create_simple=False):
                 "clf__estimator__min_samples_leaf": [1, 2]}
             
     if (create_simple):
-        parameters = {"vect__ngram_range": [(1, 1), (1, 2)]}
-
-    model = GridSearchCV(pipeline, parameters, verbose=2, cv=2)
+        parameters = {"clf__estimator__n_estimators": [5]}
+        model = GridSearchCV(pipeline, parameters, verbose=3, cv=2)
+    else:
+        model = GridSearchCV(pipeline, parameters, verbose=3, cv=2)
 
     """These values were returned for the complex model 
 
@@ -153,6 +154,7 @@ def train_predict_eval(model, X, y):
     
     # fit model
     model.fit(X_train, y_train)
+    print("Successfully fit")
     y_pred = model.predict(X_test)
 
 
