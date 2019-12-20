@@ -1,20 +1,24 @@
-# import libraries
+import sys
 import pandas as pd
 from sqlalchemy import create_engine
 
-def load_data():
+
+def load_data(messages_filepath, categories_filepath):
     """Load the messages and categories csv files from the folder it is in
+
+    INPUT: messages_filepath: the path to the disaster message
+           categories_filepath: the path to the disaster categories
 
     RETURNS: messages dataframe, categories dataframe"""
 
     # load messages datasets
-    messages = pd.read_csv("messages.csv")
-    categories = pd.read_csv("categories.csv")
+    messages = pd.read_csv("disaster_messages.csv")
+    categories = pd.read_csv("disaster_categories.csv")
 
     return messages, categories
 
 
-def prep_and_clean(messages, categories):
+def clean_data(messages, categories):
     """Take the messages and categories dataframes and performs the following actions
     * Merge them into one
     * Convert the semicolon separated categories into columns
@@ -69,27 +73,46 @@ def prep_and_clean(messages, categories):
     return df
 
 
-def save_to_db(df, tablename="DISASTER_DATA", should_replace=True):
+def save_data(df, database_filename, should_replace=True):
     """Save the dataframe to a SQLite table. 
     Allows to specify the tablename and the action to perform, 
     in case the table exists
 
     INPUT: df - The dataframe to save to the database
-           tablename - The table to save the dataframe into 
-                (defaulted to DISASTER_DATA)
+           database_filename - the name of the output file
            should_replace - In case the table exists, should it be replaced? 
                 (defaulted to True)"""
     
-    engine = create_engine('sqlite:///ETL_Disaster.db')
+    engine = create_engine("sqlite:///" + database_filename)
     df.to_sql('DISASTER_DATA', engine, index=False, if_exists="replace")
-    print("database: {} - tablename {}".format("ETL_Disaster.db", tablename))
+    print("database: {} - tablename {}".format(database_filename, "DISASTER_DATA"))  
 
 
-if __name__ == "__main__":
-    """Load the data, clean the data, save the data"""
-    messages, categories = load_data() # Load data
-    print("Loaded data")
-    df = prep_and_clean(messages, categories) # Clean data
-    print("Cleaned data")
-    save_to_db(df) # Save data
-    print("Saved data")
+def main():
+    if len(sys.argv) == 4:
+
+        messages_filepath, categories_filepath, database_filepath = sys.argv[1:]
+
+        print('Loading data...\n    MESSAGES: {}\n    CATEGORIES: {}'
+              .format(messages_filepath, categories_filepath))
+        messages, categories = load_data(messages_filepath, categories_filepath)
+
+        print('Cleaning data...')
+        df = clean_data(messages, categories)
+        
+        print('Saving data...\n    DATABASE: {}'.format(database_filepath))
+        save_data(df, database_filepath)
+        
+        print('Cleaned data saved to database!')
+    
+    else:
+        print('Please provide the filepaths of the messages and categories '\
+              'datasets as the first and second argument respectively, as '\
+              'well as the filepath of the database to save the cleaned data '\
+              'to as the third argument. \n\nExample: python process_data.py '\
+              'disaster_messages.csv disaster_categories.csv '\
+              'DisasterResponse.db')
+
+
+if __name__ == '__main__':
+    main()
