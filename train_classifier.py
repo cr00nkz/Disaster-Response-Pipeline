@@ -117,7 +117,12 @@ def train(model, X, y):
     model.fit(X_train, y_train)
 
     # output model test results
-    # TODO
+    for i in range(y_test.shape[1]):
+    rep = classification_report(y_test.iloc[:, i], y_pred[:, i])
+    rep = rep.split("avg / total")[1].split("     ")
+    print("Column \"{}\": Precision: {}, Recall: {}, F1-Score: {}"
+            .format(y_test.columns[i], rep[1].strip(), 
+                rep[2].strip(), rep[3].strip()))
 
     return model
 
