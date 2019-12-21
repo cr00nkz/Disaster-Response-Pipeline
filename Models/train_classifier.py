@@ -143,8 +143,6 @@ def train_predict_eval(model, X, y):
     # output model test results
     for i in range(y_test.shape[1]):
         rep = classification_report(y_test.iloc[:, i], y_pred[:, i])
-        print(i)
-        print(rep)
         try:
             rep_arr = rep.split("avg / total")[1].split("     ")
             print("Column \"{}\": Precision: {}, Recall: {}, F1-Score: {}"
