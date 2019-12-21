@@ -93,7 +93,12 @@ def build_model(create_simple=False):
                 "clf__estimator__min_samples_leaf": [1, 2]}
             
     if (create_simple):
-        parameters = {"clf__estimator__n_estimators": [5]}
+        parameters = {"vect__ngram_range": [(1, 1)],
+                        "vect__max_df": [0.5],
+                        "clf__estimator__min_samples_leaf": [2],
+                        "clf__estimator__max_features": ['sqrt'],
+                        "clf__estimator__n_estimators": [10]}
+
         model = GridSearchCV(pipeline, parameters, verbose=3, cv=2)
     else:
         model = GridSearchCV(pipeline, parameters, verbose=3, cv=2)
@@ -115,28 +120,6 @@ def build_model(create_simple=False):
             warm_start=False),
             n_jobs=1))]"""
 
-    """These values were returned for the simple model 
-
-    (cv.best_estimator_.steps)
-    [('vect', CountVectorizer(analyzer='word', binary=False, decode_error='strict',
-            dtype=<class 'numpy.int64'>, encoding='utf-8', input='content',
-            lowercase=True, max_df=1.0, max_features=None, min_df=1,
-            ngram_range=(1, 1), preprocessor=None, stop_words=None,
-            strip_accents=None, token_pattern='(?u)\\b\\w\\w+\\b',
-            tokenizer=<function tokenize at 0x7fdf6a7e6268>, vocabulary=None)),
-    ('tfidf',
-    TfidfTransformer(norm='l2', smooth_idf=True, sublinear_tf=False, use_idf=True)),
-    ('clf',
-    MultiOutputClassifier(estimator=RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
-                max_depth=None, max_features='auto', max_leaf_nodes=None,
-                min_impurity_decrease=0.0, min_impurity_split=None,
-                min_samples_leaf=1, min_samples_split=2,
-                min_weight_fraction_leaf=0.0, n_estimators=10, n_jobs=1,
-                oob_score=False, random_state=None, verbose=0,
-                warm_start=False),
-                n_jobs=1))]"""
-
-
     return model
 
 
@@ -157,14 +140,21 @@ def train_predict_eval(model, X, y):
     print("Successfully fit")
     y_pred = model.predict(X_test)
 
-
     # output model test results
     for i in range(y_test.shape[1]):
         rep = classification_report(y_test.iloc[:, i], y_pred[:, i])
-        rep = rep.split("avg / total")[1].split("     ")
-        print("Column \"{}\": Precision: {}, Recall: {}, F1-Score: {}"
-                .format(y_test.columns[i], rep[1].strip(), 
-                    rep[2].strip(), rep[3].strip()))
+        print(i)
+        print(rep)
+        try:
+            rep_arr = rep.split("avg / total")[1].split("     ")
+            print("Column \"{}\": Precision: {}, Recall: {}, F1-Score: {}"
+                    .format(y_test.columns[i], rep_arr[1].strip(), 
+                        rep_arr[2].strip(), rep_arr[3].strip()))
+        except:
+            rep_arr = rep.split("weighted avg")[1].split("     ")
+            print("Column \"{}\": Precision: {}, Recall: {}, F1-Score: {}"
+                .format(y_test.columns[i], rep_arr[1].strip(), 
+                    rep_arr[2].strip(), rep_arr[3].strip()))
 
     return model
 
@@ -190,4 +180,3 @@ if __name__ == "__main__":
     print("Trained model")
     export_model(model) # Save model to HDD
     print("Exported model to HDD")
-
