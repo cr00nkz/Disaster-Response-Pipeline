@@ -12,8 +12,8 @@ def load_data(messages_filepath, categories_filepath):
     RETURNS: messages dataframe, categories dataframe"""
 
     # load messages datasets
-    messages = pd.read_csv("disaster_messages.csv")
-    categories = pd.read_csv("disaster_categories.csv")
+    messages = pd.read_csv(messages_filepath)
+    categories = pd.read_csv(categories_filepath)
 
     return messages, categories
 

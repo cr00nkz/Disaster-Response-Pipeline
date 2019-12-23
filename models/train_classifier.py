@@ -1,4 +1,5 @@
 # import libraries
+import sys
 import pandas as pd
 from sqlalchemy import create_engine
 import nltk
@@ -17,18 +18,17 @@ import pickle
 nltk.download(['punkt', 'wordnet', 'stopwords'])
 
 
-def load_data(db="sqlite:///../data/ETL_Disaster.db", table="DISASTER_DATA"):
+def load_data(db, table="DISASTER_DATA"):
     """Loads the previously saved data from database and table
 
     INPUT: db - The sqlite database file 
-                (default: sqlite:///../data/ETL_Disaster.db)
            table - The tablename containing the data (default: DISASTER_DATA)
 
     RETURNS: X - Dataframe containing the messages for training/testing
              Y - Dataframe containing the 36 predictions for X
     """
     # load data from database
-    engine = create_engine(db)
+    engine = create_engine("sqlite:///" + db)
     df = pd.read_sql_table(table, engine)
 
     #prepare X and y dataframes 
@@ -99,9 +99,7 @@ def build_model(create_simple=False):
                         "clf__estimator__max_features": ['sqrt'],
                         "clf__estimator__n_estimators": [10]}
 
-        model = GridSearchCV(pipeline, parameters, verbose=3, cv=2)
-    else:
-        model = GridSearchCV(pipeline, parameters, verbose=3, cv=2)
+    model = GridSearchCV(pipeline, parameters, verbose=3, cv=2)
 
     """These values were returned for the complex model 
 
@@ -157,7 +155,7 @@ def train_predict_eval(model, X, y):
     return model
 
 
-def export_model(model, filename="model.pck"):
+def export_model(model, filename):
     """Exports the model to a pickle file
 
     INPUT: model - The model to be pickled/saved
@@ -169,12 +167,20 @@ def export_model(model, filename="model.pck"):
     pickle.dump(model, dumpfile)
     dumpfile.close()
 
+
 if __name__ == "__main__":
-    X, y = load_data() # Load data from DB
-    print("Loaded data")
-    model = build_model(True) # Build pipeline model
-    print("Built model")
-    model = train_predict_eval(model, X, y) # Train model
-    print("Trained model")
-    export_model(model) # Save model to HDD
-    print("Exported model to HDD")
+    if len(sys.argv) == 3:
+        database_filepath, model_filepath = sys.argv[1:]
+        X, y = load_data(database_filepath) # Load data from DB
+        print("Loaded data")
+        model = build_model(True) # Build pipeline model
+        print("Built model")
+        model = train_predict_eval(model, X, y) # Train model
+        print("Trained model")
+        export_model(model, model_filepath) # Save model to HDD
+        print("Exported model to HDD")
+    else:
+        print('Please provide the filepath of the disaster messages database '\
+              'as the first argument and the filepath of the pickle file to '\
+              'save the model to as the second argument. \n\nExample: python '\
+              'train_classifier.py ../data/ETL_Disaster.db model.pck')
