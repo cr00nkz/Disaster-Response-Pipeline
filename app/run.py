@@ -67,12 +67,18 @@ model = joblib.load("../models/model.pck")
 def index():
     
     # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
     
+    direct_counts = df.groupby("genre").sum()[0:1].drop(columns=["id"])
+    direct_names = list(direct_counts.columns)
+
+    news_counts = df.groupby("genre").sum()[1:2].drop(columns=["id"])
+    news_names = list(news_counts.columns)
+
+    social_counts = df.groupby("genre").sum()[2:3].drop(columns=["id"])
+    social_names = list(social_counts.columns)
     # create visuals
-    # TODO: Below is an example - modify to create your own visuals
     graphs = [
         {
             'data': [
@@ -89,6 +95,60 @@ def index():
                 },
                 'xaxis': {
                     'title': "Genre"
+                }
+            }
+        },
+                {
+            'data': [
+                Bar(
+                    x=direct_names,
+                    y=direct_counts.values[0]
+                )
+            ],
+
+            'layout': {
+                'title': 'Direct report messages detail',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Category"
+                }
+            }
+        },
+                {
+            'data': [
+                Bar(
+                    x=news_names,
+                    y=news_counts.values[0]
+                )
+            ],
+
+            'layout': {
+                'title': 'News messages detail',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Category"
+                }
+            }
+        },
+                {
+            'data': [
+                Bar(
+                    x=social_names,
+                    y=social_counts.values[0]
+                )
+            ],
+
+            'layout': {
+                'title': 'Social media messages detail',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Category"
                 }
             }
         }
